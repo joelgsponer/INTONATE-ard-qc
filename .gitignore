@@ -1,0 +1,8 @@
+inputs/*
+*.csv
+*.tsv
+outputs/*
+*.txt
+.slime
+.lintr
+
