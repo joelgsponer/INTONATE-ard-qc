@@ -1,8 +1,16 @@
 # Intonate QC Docker Image
 
-This repository contains a Docker setup for the `intonate_qc` application. Below are instructions for building and running the Docker image.
-
 Please copy the `ADEVENT` `ADLONG` `ADSL` `ADTTE` to the `input` folder (files are loaded via partial matching, so no need to adjust file names as long as they start with the ADEVENT etc.).
+
+This repository contains a Docker setup for the `intonate_qc` application. Below are instructions for building and running the Docker image. Alternative you can run the R script directely.
+
+Either using `renv` first to separate library installation from your system installations:
+`Rscript R/install_renv.R`
+`Rscript R/main.R`
+or simply by directely calling the `main.R`	script:
+`Rscript R/main.R`
+Of course from within the project folder.
+
 Running the docker container will create three short report in `output`.
 1. log.txt (information to be shared with me)
 2. log_sensitive.txt (information not to be shared with me, but potentially helpfull to debug)
