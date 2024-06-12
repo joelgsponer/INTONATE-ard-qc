@@ -58,6 +58,10 @@ increase_over_10 <- function(base, rec){
   res <- delta > 10
   return(as.numeric(res))
 }
+# Values over 0
+value_over_0 <- function(base,rec){
+  return(as.numeric(rec$aval > 0))
+}
 
 # Worsening functions
 WORSENING_FUNCTIONS <- list(
@@ -65,6 +69,7 @@ WORSENING_FUNCTIONS <- list(
     "MRI Gd+ T1 lesion count"= any_increase,
     "MRI Gd+ T1 lesion count increased"= if_Yes,
     "MRI Gd+ T1 lesion count not increased"= if_No,
+    "MRI T2 new lesion count" = value_over_0,
     "MRI T2 lesion count"= any_increase,
     "MRI T2 lesion count increased"= if_Yes,
     "MRI T2 lesion count not increased"= if_No,
