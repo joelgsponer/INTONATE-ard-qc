@@ -109,6 +109,16 @@ tryCatch(
 )
 # ADlONG
 log_all("===ADEVENT===")
+
+tryCatch({
+  log("---Params in ADLONG---")
+  log(unique(adlong$param))
+}, error = function(e){
+    print(e)
+    log_error(paste("Error in ADLONG: ", e))
+})
+
+
 tryCatch(
   {
     # Check that first chg_fl entry is in adtte
