@@ -6,4 +6,4 @@ outputs/*
 .slime
 .lintr
 renv/*
-
+.tmp

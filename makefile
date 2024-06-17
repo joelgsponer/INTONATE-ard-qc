@@ -10,7 +10,6 @@ run:
 	docker run --rm \
 	-v $(PWD)/input:/usr/src/app/input \
 	-v $(PWD)/output:/usr/src/app/output \
-	-v $(PWD)/R:/usr/src/app/R \
 	$(IMAGE_NAME)
 
 # Run the Docker container interactively
