@@ -8,7 +8,6 @@ build:
 # Run the Docker container
 run:
 	docker run --rm \
-	-v $(PWD)/input:/usr/src/app/input \
 	-v $(PWD)/output:/usr/src/app/output \
 	$(IMAGE_NAME)
 

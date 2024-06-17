@@ -74,8 +74,136 @@ tryCatch(
     log_all(paste("Error in ADSL: ", e))
   }
 )
+# ADlONG
+log_all("===ADLONG===")
+tryCatch({
+  log("---Params in ADLONG---")
+  log(unique(adlong$param))
+}, error = function(e){
+    print(e)
+    log_error(paste("Error in ADLONG: ", e))
+})
+tryCatch(
+  {
+    source("R/change_functions.R")
+    log_sensitive("---Number of records per patient and param---")
+    .tbl <- adlong %>%
+      dplyr::group_by(person_id, param) %>%
+      dplyr::summarise(n = dplyr::n()) %>%
+      dplyr::arrange(dplyr::desc(n)) %>%
+      knitr::kable()
+    log_sensitive(.tbl)
+    log("---Changes per param---")
+    .tbl <- adlong %>%
+      dplyr::mutate(chg_fl = factor(chg_fl)) %>%
+      dplyr::mutate(chg_fl = forcats::fct_na_value_to_level(chg_fl)) %>%
+      dplyr::group_by(param, chg_fl) %>%
+      dplyr::summarise(n = dplyr::n()) %>%
+      knitr::kable()
+    log(.tbl)
+    log("---Checking change functions---")
+    change_checks <- adlong %>%
+      named_group_split(param) %>%
+      purrr::imap(function(.d, param) {
+        check_param <- .d %>%
+          named_group_split(person_id) %>%
+          purrr::imap(function(.dd, person) {
+            tryCatch({
+              # Check if is sinlge record
+              checks <- c()
+              # Check ady calcualtion
+              ady <- as.Date(.dd$adt) - as.Date(.dd$het_start)
+              # Check ref_flag
+              if (!(all(is.na(ady)))) checks <- c(checks, .dd$ady == as.numeric(ady))
+              min_ady_index <- which.min(abs(ady))
+              if (length(min_ady_index) > 0) {
+                checks <- c(checks, .dd$ref_fl[min_ady_index] == 1)
+              }
+              if (nrow(.dd) == 1) {
+                checks <- c(checks, .dd$single_record_flag == 1)
+              } else {
+                # Check Calculation
+                .f <- WORSENING_FUNCTIONS[[param]]
+                res <- .dd %>%
+                  dplyr::group_by_all() %>%
+                  dplyr::group_split() %>%
+                  purrr::map(function(rec) {
+                    base <- .dd %>%
+                      dplyr::filter(ady < rec$ady) %>%
+                      dplyr::filter(chg_fl == 1 | ref_fl == 1) %>%
+                      dplyr::arrange(ady) %>%
+                      tail(1)
+                    if (nrow(base) > 0) {
+                      chg <- .f(base, rec)
+                      .checks <- c(chg == rec$chg_fl)
+                      return(.checks)
+                    } else {
+                      return(NULL)
+                    }
+                  })
+                checks <- c(checks, unlist(res))
+                return(checks)
+              }
+              }, error = function(e){
+                cli::cli_alert_danger(as.character(e))
+                log_error(as.character(e))
+                return(FALSE)
+              })
+            if (!all(checks)) {
+              log_sensitive("------")
+              log_sensitive(knitr::kable(.dd %>%
+                dplyr::select(
+                  param,
+                  ady,
+                  aval,
+                  ref_fl,
+                  ref_ady,
+                  ref_aval,
+                  ref_chg,
+                  base_ady,
+                  base_aval,
+                  chg_fl,
+                  before_reference_flag,
+                  single_record_flag
+                )))
+            }
+            if (!all(checks)) log(paste("Checks failed for param: ", param))
+            return(checks)
+          })
+        log(paste0(param, ":"))
+        log(all(unlist(check_param), na.rm = T))
+      })
+      if (all(unlist(change_checks), na.rm = T)){log("All checks passed")}
+      # check that all base_fl records are chg_fl 0
+      log("---Checking ref_fl---")
+      res <- adlong %>% 
+        dplyr::filter(param != "relapse") %>%
+        dplyr::group_by_all() %>%
+        dplyr::mutate(x = sum(ref_fl, chg_fl)) %>%
+        dplyr::ungroup() %>%
+        dplyr::filter(x > 1) %>%
+        nrow()
+      log(paste("Number of records with ref_fl plus chg_fl > 1: ", res))
+  },
+  error = function(e) {
+    print(e)
+    log_error(paste("Error in ADLONG: ", e))
+  }
+)
 # ADTTE
 log_all("===ADTTE===")
+tryCatch(
+  {
+    .tbl <- adtte %>%
+      dplyr::group_by(param, event) %>%
+      dplyr::summarise(n = dplyr::n())
+    .tbl <- knitr::kable(.tbl)
+    log(.tbl)
+  },
+  error = function(e) {
+    log_error(paste("Error in ADTTE: ", e))
+  }
+)
 tryCatch(
   {
     # Check that each patients has one, but only one entry per param
@@ -97,7 +225,6 @@ tryCatch(
     adtte %>%
       named_group_split(param) %>%
       purrr::iwalk(function(.d, .param) {
-        log_all(paste("Checking param: ", .param))
         patients_not_in <- person_ids[!person_ids %in% .d$person_id]
         log_sensitive(paste("Patients not in ADTTE", .param, ":", patients_not_in))
         log(paste("Number of patients not in ADTTE", .param, ":", length(patients_not_in)))
@@ -107,18 +234,8 @@ tryCatch(
     log_error(paste("Error in ADTTE: ", e))
   }
 )
-# ADlONG
+# ADEVENT
 log_all("===ADEVENT===")
-
-tryCatch({
-  log("---Params in ADLONG---")
-  log(unique(adlong$param))
-}, error = function(e){
-    print(e)
-    log_error(paste("Error in ADLONG: ", e))
-})
-
-
 tryCatch(
   {
     # Check that first chg_fl entry is in adtte
@@ -141,107 +258,7 @@ tryCatch(
       }) %>%
       unlist() %>%
       all()
-    log(paste("All entries in ADTTE corresponding to first ADLONG entry after het start:", res))
-  },
-  error = function(e) {
-    print(e)
-    log_error(paste("Error in ADLONG: ", e))
-  }
-)
-# ADlONG
-log_all("===ADLONG===")
-tryCatch(
-  {
-    source("R/change_functions.R")
-    log_sensitive("---Number of records per patient and param---")
-    .tbl <- adlong %>%
-      dplyr::group_by(person_id, param) %>%
-      dplyr::summarise(n = dplyr::n()) %>%
-      dplyr::arrange(dplyr::desc(n)) %>%
-      knitr::kable()
-    log_sensitive(.tbl)
-    log("---Changes per param---")
-    .tbl <- adlong %>%
-      dplyr::mutate(chg_fl = factor(chg_fl)) %>%
-      dplyr::mutate(chg_fl = forcats::fct_na_value_to_level(chg_fl)) %>%
-      dplyr::group_by(param, chg_fl) %>%
-      dplyr::summarise(n = dplyr::n()) %>%
-      knitr::kable()
-    log(.tbl)
-    log("---Checking change functions---")
-    change_checks <- adlong %>%
-      named_group_split(person_id) %>%
-      purrr::map(function(.d) {
-        .d %>%
-          named_group_split(param) %>%
-          purrr::imap(function(.dd, param) {
-            # Check if is sinlge record
-            checks <- c()
-            # Check ady calcualtion
-            ady <- as.Date(.dd$adt) - as.Date(.dd$het_start)
-            # Check ref_flag
-            if (!(all(is.na(ady)))) checks <- c(checks, .dd$ady == as.numeric(ady))
-            min_ady_index <- which.min(abs(ady))
-            if (length(min_ady_index) > 0) {
-              checks <- c(checks, .dd$ref_fl[min_ady_index] == 1)
-            }
-            if (nrow(.dd) == 1) {
-              checks <- c(checks, .dd$single_record_flag == 1)
-            } else {
-              # Check Calculation
-              .f <- WORSENING_FUNCTIONS[[param]]
-              res <- .dd %>%
-                dplyr::group_by_all() %>%
-                dplyr::group_split() %>%
-                purrr::map(function(rec) {
-                  base <- .dd %>%
-                    dplyr::filter(ady < rec$ady) %>%
-                    dplyr::filter(chg_fl == 1 | ref_fl == 1) %>%
-                    dplyr::arrange(ady) %>%
-                    tail(1)
-                  if (nrow(base) > 0) {
-                    chg <- .f(base, rec)
-                    .checks <- c(chg == rec$chg_fl)
-                    if (!all(checks)) browser()
-                    return(.checks)
-                  } else {
-                    return(NULL)
-                  }
-                })
-              checks <- c(checks, unlist(res))
-              return(checks)
-            }
-            if (!all(checks)) {
-              log_sensitive("------")
-              log_sensitive(knitr::kable(.dd %>%
-                dplyr::select(
-                  param,
-                  ady,
-                  aval,
-                  ref_fl,
-                  ref_ady,
-                  ref_aval,
-                  ref_chg,
-                  base_ady,
-                  base_aval,
-                  chg_fl,
-                  before_reference_flag,
-                  single_record_flag
-                )))
-            }
-            if (!all(checks)) log(paste("Checks failed for param: ", param))
-            return(checks)
-          })
-      })
-      if (all(unlist(change_checks))){log("All checks passed")}
-      # check that all base_fl records are chg_fl 0
-      log("---Checking ref_fl---")
-      res <- adlong %>% 
-        dplyr::filter(param != "relapse") %>%
-        dplyr::mutate(x = sum(ref_fl, chg_fl)) %>%
-        dplyr::filter(x > 1) %>%
-        nrow()
-      log(paste("Number of records with ref_fl plus chg_fl > 1: ", res))
+    log(paste("All entries in ADTTE corresponding to first ADEVENT entry after het start:", res))
   },
   error = function(e) {
     print(e)
