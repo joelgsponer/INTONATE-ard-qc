@@ -2,7 +2,7 @@
 library(dplyr)
 load_file <- function(x){
   filename <- Sys.glob(glue::glue("input/{x}*.csv"))
-  vroom::vroom(filename)
+  readr::read_csv(filename)
 }
 adsl <- load_file("ADSL")
 adtte <- load_file("ADTTE")
