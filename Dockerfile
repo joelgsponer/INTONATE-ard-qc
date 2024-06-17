@@ -5,5 +5,5 @@ FROM rocker/tidyverse:latest
 WORKDIR /usr/src/app
 
 # Run the main R script
-CMD ["Rscript", "R/main.R"]
+CMD ["Rscript", "--vanilla R/main.R"]
 
