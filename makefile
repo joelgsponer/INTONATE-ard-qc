@@ -22,6 +22,10 @@ run-interactive:
 	$(IMAGE_NAME) \
 	/bin/bash
 
+# Run renv version
+run-renv:
+	Rscript --vanilla R/prepare-renv.R
+	Rscript R/main.R
 
 # Clean the outputs directory
 clean:

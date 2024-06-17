@@ -51,6 +51,10 @@ make run-interactive
 
 This is similar to the `run` command but provides an interactive terminal session inside the container.
 
+### Running the renv version
+In order to automatically setup and restore the renv verion and run it use
+`make run-renv`
+
 ### Cleaning the Outputs Directory
 To clean the `outputs` directory, execute:
 
