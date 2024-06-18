@@ -238,6 +238,18 @@ tryCatch(
 log_all("===ADEVENT===")
 tryCatch(
   {
+    .tbl <- adevent %>%
+      dplyr::group_by(param, event) %>%
+      dplyr::summarise(n = dplyr::n())
+    .tbl <- knitr::kable(.tbl)
+    log(.tbl)
+  },
+  error = function(e) {
+    log_error(paste("Error in ADTTE: ", e))
+  }
+)
+tryCatch(
+  {
     # Check that first chg_fl entry is in adtte
     res <- adevent %>%
       named_group_split(person_id) %>%
