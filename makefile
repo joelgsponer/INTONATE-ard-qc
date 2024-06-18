@@ -3,7 +3,7 @@ IMAGE_NAME=intonate_qc
 
 # Build the Docker image
 build:
-	docker build -t $(IMAGE_NAME) .
+	docker build --no-cache -t $(IMAGE_NAME) .
 
 # Run the Docker container
 run:

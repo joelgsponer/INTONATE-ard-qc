@@ -239,7 +239,7 @@ log_all("===ADEVENT===")
 tryCatch(
   {
     .tbl <- adevent %>%
-      dplyr::group_by(param, event) %>%
+      dplyr::group_by(param) %>%
       dplyr::summarise(n = dplyr::n())
     .tbl <- knitr::kable(.tbl)
     log(.tbl)
