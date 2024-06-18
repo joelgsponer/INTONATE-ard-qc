@@ -245,7 +245,7 @@ tryCatch(
     log(.tbl)
   },
   error = function(e) {
-    log_error(paste("Error in ADTTE: ", e))
+    log_error(paste("Error in ADEVENT: ", e))
   }
 )
 tryCatch(
