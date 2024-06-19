@@ -50,6 +50,7 @@ log_all <- function(msg) {
 }
 # ADSL
 # Check only on entry per patient
+log("v0.1")
 log_all("===ADSL===")
 tryCatch(
   {
