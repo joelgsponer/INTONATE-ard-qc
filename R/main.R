@@ -117,10 +117,10 @@ tryCatch(
               if (!(all(is.na(ady)))) checks <- c(checks, .dd$ady == as.numeric(ady))
               min_ady_index <- which.min(abs(ady))
               if (length(min_ady_index) > 0) {
-                checks <- c(checks, .dd$ref_fl[min_ady_index] == 1)
+                checks <- c(checks, .dd$ref_fl[min_ady_index] == 1) #1
               }
               if (nrow(.dd) == 1) {
-                checks <- c(checks, .dd$single_record_flag == 1)
+                checks <- c(checks, .dd$single_record_flag == 1) #2
               } else {
                 # Check Calculation
                 .f <- WORSENING_FUNCTIONS[[param]]
@@ -130,12 +130,13 @@ tryCatch(
                   purrr::map(function(rec) {
                     base <- .dd %>%
                       dplyr::filter(ady < rec$ady) %>%
+                      dplyr::filter(before_reference_flag == 0) %>%
                       dplyr::filter(chg_fl == 1 | ref_fl == 1) %>%
                       dplyr::arrange(ady) %>%
                       tail(1)
                     if (nrow(base) > 0) {
                       chg <- .f(base, rec)
-                      .checks <- c(chg == rec$chg_fl)
+                      .checks <- c(chg == rec$chg_fl) #...
                       return(.checks)
                     } else {
                       return(NULL)
@@ -167,7 +168,7 @@ tryCatch(
                   single_record_flag
                 )))
             }
-            if (!all(checks)) log(paste("Checks failed for param: ", param))
+            #if (!all(checks)) log(paste("Checks failed for param: ", param))
             return(checks)
           })
         log(paste0(param, ":"))
