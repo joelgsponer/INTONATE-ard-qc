@@ -144,7 +144,8 @@ tryCatch(
                         return(NULL)
                       })
                       .checks <- c(chg == rec$chg_fl) #...
-                      if(!.checks){
+
+                      if(is.na(.checks) || is.null(.checks) || !(.checks)){
                         log("---Error---")
                         log("Record:")
                         log(rec %>%
