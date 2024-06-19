@@ -121,6 +121,7 @@ tryCatch(
               }
               if (nrow(.dd) == 1) {
                 checks$C <- .dd$single_record_flag == 1 #2
+                if (!(checks$C)) log(.dd %>% dplyr::select(ady, aval, single_record_flag) %>% knitr::kable())
               } else {
                 # Check Calculation
                 .f <- WORSENING_FUNCTIONS[[param]]
