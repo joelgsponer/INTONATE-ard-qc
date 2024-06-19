@@ -157,6 +157,9 @@ tryCatch(
                         log(base %>%
                           dplyr::select(param, ady, aval, base_ady, base_chg, chg_fl, record_id, ref_id,  base_id) 
                           %>% knitr::kable())
+                        log(.dd %>%
+                          dplyr::select(param, ady, aval, base_ady, base_chg, chg_fl, record_id, ref_id,  base_id) 
+                          %>% knitr::kable())
                         log("---")
                       }
                       return(.checks)
