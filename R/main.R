@@ -136,15 +136,15 @@ tryCatch(
                       dplyr::arrange(ady) %>%
                       tail(1)
                     if (nrow(base) > 0) {
+                      .checks = NULL
                       tryCatch({
                         chg <- .f(base, rec)
+                        .checks <- c(chg == rec$chg_fl) #...
                       }, error = function(e){
                         log_error(as.character(e))
                         log_error(param)
                         return(NULL)
                       })
-                      .checks <- c(chg == rec$chg_fl) #...
-
                       if(is.na(.checks) || is.null(.checks) || !(.checks)){
                         log("---Error---")
                         log("Record:")
