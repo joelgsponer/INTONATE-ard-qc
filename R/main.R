@@ -137,6 +137,18 @@ tryCatch(
                     if (nrow(base) > 0) {
                       chg <- .f(base, rec)
                       .checks <- c(chg == rec$chg_fl) #...
+                      if(!.checks){
+                        log("---Error---")
+                        log("Record:")
+                        log(rec %>%
+                          dplyr::select(param, ady, aval, base_ady, base_chg, chg_fl, record_id, ref_id,  base_id) 
+                          %>% knitr::kable())
+                        log("Base:")
+                        log(base %>%
+                          dplyr::select(param, ady, aval, base_ady, base_chg, chg_fl, record_id, ref_id,  base_id) 
+                          %>% knitr::kable())
+                        log("---")
+                      }
                       return(.checks)
                     } else {
                       return(NULL)
