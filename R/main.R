@@ -124,7 +124,7 @@ tryCatch(
               } else {
                 # Check Calculation
                 .f <- WORSENING_FUNCTIONS[[param]]
-                if(is.null(.f)) log(glue::glue("No function found {param}"))
+                if(is.null(.f)) log(paste("No function found: ", param))
                 res <- .dd %>%
                   dplyr::group_by_all() %>%
                   dplyr::group_split() %>%
