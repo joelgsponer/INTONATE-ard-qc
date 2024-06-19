@@ -110,20 +110,21 @@ tryCatch(
           purrr::imap(function(.dd, person) {
             tryCatch({
               # Check if is sinlge record
-              checks <- c()
+              checks <- list()
               # Check ady calcualtion
               ady <- as.Date(.dd$adt) - as.Date(.dd$het_start)
               # Check ref_flag
-              if (!(all(is.na(ady)))) checks <- c(checks, .dd$ady == as.numeric(ady))
+              if (!(all(is.na(ady)))) checks$A <- all(.dd$ady == as.numeric(ady))
               min_ady_index <- which.min(abs(ady))
               if (length(min_ady_index) > 0) {
-                checks <- c(checks, .dd$ref_fl[min_ady_index] == 1) #1
+                checks$B <- .dd$ref_fl[min_ady_index] == 1
               }
               if (nrow(.dd) == 1) {
-                checks <- c(checks, .dd$single_record_flag == 1) #2
+                checks$C <- .dd$single_record_flag == 1 #2
               } else {
                 # Check Calculation
                 .f <- WORSENING_FUNCTIONS[[param]]
+                if(is.null(.f)) log(glue::glue("No function found {param}"))
                 res <- .dd %>%
                   dplyr::group_by_all() %>%
                   dplyr::group_split() %>%
@@ -135,7 +136,13 @@ tryCatch(
                       dplyr::arrange(ady) %>%
                       tail(1)
                     if (nrow(base) > 0) {
-                      chg <- .f(base, rec)
+                      tryCatch({
+                        chg <- .f(base, rec)
+                      }, error = function(e){
+                        log_error(as.character(e))
+                        log_error(param)
+                        return(NULL)
+                      })
                       .checks <- c(chg == rec$chg_fl) #...
                       if(!.checks){
                         log("---Error---")
@@ -154,7 +161,13 @@ tryCatch(
                       return(NULL)
                     }
                   })
-                checks <- c(checks, unlist(res))
+                checks$D <- all(unlist(purrr::compact(res)))
+                if (all(unlist(checks))){
+                  checks <- list(All = TRUE)
+                } else {
+                  checks$person_id <- person
+                  checks$param <- param
+                }
                 return(checks)
               }
               }, error = function(e){
@@ -162,7 +175,7 @@ tryCatch(
                 log_error(as.character(e))
                 return(FALSE)
               })
-            if (!all(checks)) {
+            if (!all(unlist(unname(checks)))) {
               log_sensitive("------")
               log_sensitive(knitr::kable(.dd %>%
                 dplyr::select(
@@ -181,10 +194,17 @@ tryCatch(
                 )))
             }
             #if (!all(checks)) log(paste("Checks failed for param: ", param))
+            if (all(unlist(checks))){
+              checks <- list(All = TRUE)
+            } else {
+              checks$person_id <- person
+              checks$param <- param
+            }
             return(checks)
-          })
+          }) %>%
+          dplyr::bind_rows()
         log(paste0(param, ":"))
-        log(all(unlist(check_param), na.rm = T))
+        log(check_param %>% dplyr::distinct() %>% knitr::kable())
       })
       if (all(unlist(change_checks), na.rm = T)){log("All checks passed")}
       # check that all base_fl records are chg_fl 0
