@@ -1,13 +1,5 @@
 # Load datasets
 library(dplyr)
-load_file <- function(x){
-  filename <- Sys.glob(glue::glue("input/{x}*.csv"))
-  readr::read_csv(filename)
-}
-adsl <- load_file("ADSL")
-adtte <- load_file("ADTTE")
-adlong <- load_file("ADLONG")
-adevent <- load_file("ADEVENT")
 # Helpers
 named_group_split <- function(.tbl, ..., verbose = F, keep = T, sep = " / ") {
   grouped <- dplyr::group_by(.tbl, ...)
@@ -48,6 +40,16 @@ log_all <- function(msg) {
   log_sensitive(msg)
   log_error(msg)
 }
+# Load Data
+load_file <- function(x){
+  filename <- Sys.glob(glue::glue("input/{x}*.csv"))
+  log(filename)
+  readr::read_csv(filename)
+}
+adsl <- load_file("ADSL")
+adtte <- load_file("ADTTE")
+adlong <- load_file("ADLONG")
+adevent <- load_file("ADEVENT")
 # ADSL
 # Check only on entry per patient
 log("v0.1")
